@@ -17,10 +17,11 @@ public class Partida implements Runnable {
 	private long tiempoInicio;
 	private long duracionPartida;
 	private static DecimalFormat df = new DecimalFormat("0.00");
-	
-	public Partida(String palabra, String pista) {
-		this.palabra = palabra;
-		this.pista = pista;
+
+	// PRE:
+	// POS: crea una nueva partida con una palabra aleatoria elegida del fichero de palabras.
+	public Partida() {
+		this.palabra = Palabra.generarPalabra();
 		this.jugadores = new ArrayList<>();
 		this.vectorSolucion = new char[palabra.length()];
 		for (int i = 0; i < palabra.length(); i++) {
@@ -34,14 +35,24 @@ public class Partida implements Runnable {
 		tiempoInicio = System.currentTimeMillis();
 	}
 
+	// PRE: la partida debe haber sido inicializada.
+	// POS: añade al Jugador jugador a la partida actual.
 	public void addJugador(Jugador jugador) {
 		jugadores.add(jugador);
 	}
 
+	
+	// PRE: la partida debe haber sido inicializada.
+	// POS: devuelve un array formado por lo caracteres que componen la palabra jugada.
 	public char[] convertir() {
 		return (palabra.toCharArray());
 	}
 
+	// PRE: la partida debe haber sido inicializada.
+	// POS: devuelve TRUE si la letra introducida está en la palabra jugada;
+	// POS: FALSE en caso contrario. Actualiza el valor del número de errores, y
+	// POS: pone el estado de la partida a finalizado si se ha alcanzado el número máximo de errores.
+	
 	public boolean comprobar(String s) {
 		for (char c : vectorPalabraInicio) {
 			if (c == s.charAt(0)) {
@@ -57,6 +68,9 @@ public class Partida implements Runnable {
 		return (false);
 	}
 
+	// PRE: la partida debe haber sido inicializada.
+	// POS: devuelve TRUE si la letra introducida ya ha sido escrita,
+	// POS: y FALSE en caso contrario.
 	public boolean yaEscrita(String s) {
 		for (int i = 0; i < palabra.length(); i++) {
 			if (vectorSolucion[i] == s.charAt(0)) {
@@ -67,15 +81,34 @@ public class Partida implements Runnable {
 		return (false);
 	}
 
-	public void escribirLetra(String s) {
-		if (yaEscrita(s)) {
-			errores++;
-			
+	// PRE: la partida debe haber sido inicializada.
+	// POS: si s es una palabra, la compara con la palabra jugada y determina si es correcta
+	// POS: o errónea (así como actualizar los atributos de número de errores / aciertos según proceda).
+	// POS: si s es un sólo caracter, comprueba que pertenezca a la solución o si ya ha sido escrita,
+	// POS: y si sí pertenece o no ha sido ya escrito, lo añade
+	// POS: al vector de la solución (actualizando el número de aciertos).
+	public void jugarLetra(String s) {
+		if (s.length() > 1) {
+			if (s.compareToIgnoreCase(palabra) == 0) {
+				this.vectorSolucion = this.vectorPalabraInicio;
+				this.letrasResueltas = s.length();
+
+			} else {
+				errores++;
+			}
+
 		} else {
-			for (int i = 0; i < palabra.length(); i++) {
-				if (vectorPalabraInicio[i] == s.charAt(0)) {
-					vectorSolucion[i] = s.charAt(0);
-					letrasResueltas++;
+			if (yaEscrita(s)) {
+				errores++;
+
+			} else {
+				if (comprobar(s)) {
+					for (int i = 0; i < palabra.length(); i++) {
+						if (vectorPalabraInicio[i] == s.charAt(0)) {
+							vectorSolucion[i] = s.charAt(0);
+							letrasResueltas++;
+						}
+					}
 				}
 			}
 		}
@@ -86,6 +119,9 @@ public class Partida implements Runnable {
 		}
 	}
 
+	// PRE: la partida debe haber sido inicializada.
+	// POS: lleva a cabo una partida del juego del ahorcado, respetando los turnos
+	// POS: de los jugadores, mostrando el estado de la partida y calculando el tiempo de partida.
 	public void run() {
 		String letra;
 		while (!acabado) {
@@ -94,10 +130,8 @@ public class Partida implements Runnable {
 					dibujar();
 					j.mostrar();
 					letra = j.jugarTurno();
-					if (comprobar(letra)) {
-						escribirLetra(letra);
-					}
-					
+					jugarLetra(letra);
+
 				} else {
 					duracionPartida = System.currentTimeMillis() - tiempoInicio;
 				}
@@ -108,6 +142,8 @@ public class Partida implements Runnable {
 		dibujar();
 	}
 
+	// PRE: la partida debe haber sido inicializada.
+	// POS: en función de la cantidad de errores de la partida, muestra el gráfico correspondiente por pantalla.	
 	public void dibujar() {
 		System.out.println(Dibujo.dibujo(errores));
 		for (char c : vectorSolucion) {
@@ -116,10 +152,14 @@ public class Partida implements Runnable {
 		System.out.println("\n");
 	}
 
+	// PRE: la partida debe haber sido inicializada.
+	// POS: muestra por pantalla el estado final de la partida.
 	public void mostrar() {
 		System.out.println(this);
 	}
 
+	// PRE: la partida debe haber sido inicializada.
+	// POS: devuelve una String que representa el estado final de una partida del ahorcado.
 	public String toString() {
 		String partida = new String("\n\n");
 		partida += "Palabra inicial: " + palabra + "\n";

@@ -2,6 +2,8 @@ package servidor;
 
 public class Dibujo {
 
+	// PRE:
+	// POS: devuelve una String que representa la cantidad de errores cometidos en una partida del ahorcado.
 	public static String dibujo(int errores) {
 		switch (errores) {
 			case 1:

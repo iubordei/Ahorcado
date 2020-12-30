@@ -34,7 +34,7 @@ public class Servidor {
 			Jugador j1 = new Jugador("paco", null);
 			Jugador j2 = new Jugador("pepe", null);
 
-			Partida partida = new Partida(Palabra.generarPalabra(), null);
+			Partida partida = new Partida();
 			partida.addJugador(j1);
 			partida.addJugador(j2);
 
