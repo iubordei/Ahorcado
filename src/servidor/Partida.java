@@ -151,6 +151,21 @@ public class Partida implements Runnable {
 		}
 		System.out.println("\n");
 	}
+	
+	public boolean partidaAcabada() {
+		return (this.acabado);
+	}
+	
+	public String estadoPartida() {
+		String estado = "";
+		estado += "Errores: " + errores + "; ";
+		estado += "Estado de la resolución: ";
+		for (int i = 0; i < palabra.length(); i++) {
+			estado += vectorSolucion[i] + " ";
+		}
+		
+		return (estado);
+	}
 
 	// PRE: la partida debe haber sido inicializada.
 	// POS: muestra por pantalla el estado final de la partida.
