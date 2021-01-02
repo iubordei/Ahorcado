@@ -6,18 +6,10 @@ import java.io.IOException;
 import java.net.Socket;
 import java.util.Scanner;
 
+import comun.Comando;
+
 public class Cliente {
 
-	// Constantes
-	private static final int COMANDO_MOSTRAR_MENU = 0;
-	private static final int COMANDO_MOSTAR_PARTIDAS = 1;
-	private static final int COMANDO_TU_TURNO = 2;
-	private static final int COMANDO_ACTULIZACION_PARTIDA = 3;
-	private static final int COMANDO_CREAR_PARTIDA = 4;
-	private static final int COMANDO_UNIRSE_PARTIDA = 5;
-	private static final int COMANDO_SALIR = 6;
-	private static final int COMANDO_INTRODUCIR_LETRA = 7;
-	
 	private static Scanner scanner = new Scanner(System.in);
 
 	private static final String TEXTO_MENU = "" + "Bienvenido al ahoracado %s\r\n" + "¿Qué deseas hacer?\r\n\r\n"
@@ -59,9 +51,14 @@ public class Cliente {
 	}
 
 	public void waitForData() throws IOException {
-		int command = -1;
-		while ((command = in.read()) != -1) {
-			switch (command) {
+		int commandID = -1;
+
+		while ((commandID = in.read()) != -1) {
+			Comando comando = Comando.getComando(commandID);
+			if (comando == null)
+				return;
+			
+			switch (comando) {
 			case COMANDO_MOSTRAR_MENU:
 				mostrarMenu();
 				break;
@@ -90,20 +87,20 @@ public class Cliente {
 		// Retornar la opción elegida.
 		switch (opcion) {
 		case 1:
-			opcion = COMANDO_CREAR_PARTIDA;
+			opcion = Comando.COMANDO_CREAR_PARTIDA.getID();
 			break;
 		case 2:
-			opcion = COMANDO_UNIRSE_PARTIDA;
+			opcion = Comando.COMANDO_UNIRSE_PARTIDA.getID();
 			break;
 		case 3:
-			opcion = COMANDO_SALIR;
+			opcion = Comando.COMANDO_SALIR.getID();
 			break;
 		}
 
 		out.writeInt(opcion);
 		out.writeBytes(this.nombre + "\r\n");
 
-		if (opcion == COMANDO_UNIRSE_PARTIDA) {
+		if (opcion == Comando.COMANDO_UNIRSE_PARTIDA.getID()) {
 			unirsePartida();
 		}
 	}
@@ -120,7 +117,7 @@ public class Cliente {
 			opcion = scanner.nextInt();
 			switch (opcion) {
 			case 1:
-				out.write(COMANDO_CREAR_PARTIDA); // si quieres crear partida le envias al servidor un 1 indicando que
+				out.writeInt(Comando.COMANDO_CREAR_PARTIDA.getID()); // si quieres crear partida le envias al servidor un 1 indicando que
 													// quieres crear una partida.
 				break;
 			default:
@@ -153,7 +150,7 @@ public class Cliente {
 
 	public void jugarTurno() throws IOException {
 		String letra = introducirLetra();
-		out.write(COMANDO_INTRODUCIR_LETRA);
+		out.write(Comando.COMANDO_INTRODUCIR_LETRA.getID());
 		out.writeBytes(letra + "\r\n");
 	}
 

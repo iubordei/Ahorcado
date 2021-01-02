@@ -10,66 +10,31 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import comun.Comando;
+
 public class Servidor {
-	// Constants
-	private static final int COMANDO_MOSTRAR_MENU = 0;
-	private static final int COMANDO_MOSTAR_PARTIDAS = 1;
-	private static final int COMANDO_TU_TURNO = 2;
-	private static final int COMANDO_ACTULIZACION_PARTIDA = 3;
-	private static final int COMANDO_CREAR_PARTIDA = 4;
-	private static final int COMANDO_UNIRSE_PARTIDA = 5;
-	private static final int COMANDO_SALIR = 6;
-	private static final int COMANDO_INTRODUCIR_LETRA = 7;
-	private static final int COMANDO_INTRODUCIR_PALABRA = 8;
 
 	private static byte[] buff = new byte[1024 * 32];
+	
 	private static int leidos;
 
 	private static List<Partida> partidas = new ArrayList<>();
 	private static List<Partida> partidasActivas = new ArrayList<>();
 
 	public static void main(String[] args) {
-		int opcionRecibida;
+		
 		try (ServerSocket server = new ServerSocket(10000)) {
-			ExecutorService pool = Executors.newCachedThreadPool();
-
 			while (true) {
 				actualizarPartidasActivas();
-				
-				try (Socket cliente = server.accept(); // Establecemos la conexion con 1 cliente.
-						DataInputStream in = new DataInputStream(cliente.getInputStream());
-						DataOutputStream out = new DataOutputStream(cliente.getOutputStream())) {
-					
-					out.writeByte(COMANDO_MOSTRAR_MENU); // El servidor escribe al cliente, para que éste muestre el menu.
-					opcionRecibida = in.readInt();
-					String nombreJugador = in.readLine(); // Leer el nombre del jugador que se ha conectado.
-					
-					switch (opcionRecibida) {
-					case COMANDO_CREAR_PARTIDA: // Caso en el que el cliente quiere crear partida.
-						crearPartida(nombreJugador, cliente);
-						break;
-
-					case COMANDO_UNIRSE_PARTIDA: // Caso en el que el cliente quiere unirse a una partida.					
-						int numPartidas = partidasActivas.size();
-						out.writeByte(numPartidas);
-						if (numPartidas > 0) {
-							out.writeBytes(mostrarPartidasActivas());
-						}
-						
-						int partidaElegida = in.readInt() - 1; // Seleccion del indice correspondiente a la partida elegida por el cliente.
-						unirsePartida(nombreJugador, cliente, partidaElegida);
-						
-						break;
-
-					case COMANDO_SALIR: // Caso en el que el cliente quiere salir.
-
-						break;
-					}
-					
+				try
+				{
+					// Establecemos la conexion con 1 cliente y lo clasificamos. Esta
+					// acción se ejecuta en un hilo paralelo para no ocupar el servidor
+					// mientras el cliente decide qué hacer.
+					new ClasificarCliente(server.accept()).start();
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
-
 			}
 
 		} catch (IOException e) {
@@ -86,6 +51,7 @@ public class Servidor {
 		partida.addJugador(new Jugador(nombre, cliente));
 		partidas.add(partida);
 		partidasActivas.add(partida);
+		partida.run();
 	}
 	
 	// PRE: nombre != null, cliente != null, partida >= 0.
@@ -114,6 +80,90 @@ public class Servidor {
 		for (Partida p : partidas) {
 			if (p.partidaAcabada()) {
 				partidasActivas.remove(p);
+			}
+		}
+	}
+	
+	
+	private static class ClasificarCliente extends Thread {
+		private Socket cliente;
+		
+		private DataInputStream in;
+		private DataOutputStream out;
+		
+		private String nombreJugador = null;
+		
+		/**
+		 * Constructor de clase. Instancia una clase del tipo {@code ClasificarCliente}
+		 * con los argumentos proporcionados.
+		 * 
+		 * @param cliente Socket a clasificar.
+		 */
+		public ClasificarCliente(Socket cliente) {
+			this.cliente = cliente;
+		}
+		
+		@Override
+		public void run() {
+			try {
+				in = new DataInputStream(cliente.getInputStream());
+				out = new DataOutputStream(cliente.getOutputStream());
+				
+				// Muestra el menú de opciones en el cliente.
+				out.writeByte(Comando.COMANDO_MOSTRAR_MENU.getID()); // El servidor escribe al cliente, para que éste muestre el menu.
+				
+				// Lee el comando que el cliente ha escogido del menú.
+				Comando comando = Comando.getComando(in.readInt());
+				
+				// Leer el nombre del jugador que se ha conectado.
+				nombreJugador = in.readLine(); 
+				
+				// Procesa el comando que el cliente ha escogido.
+				procesarComando(comando);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		/**
+		 *  Procesa el comando recibido.
+		 *  
+		 * @param comando Comando a procesar.
+		 * 
+		 * @throws IOException Si hay alguna excepción procesando el comando.
+		 */
+		private void procesarComando(Comando comando) throws IOException {
+			// Si el comando a procesar no existe, el cliente deberá introducir un nuevo comando.
+			if (comando == null) {
+				// TODO: Indicar al cliente que el comando introducido no existe?
+				Comando nuevoComando = Comando.getComando(in.readInt());
+				procesarComando(nuevoComando);
+				return;
+			}
+				
+			switch (comando) {
+			case COMANDO_CREAR_PARTIDA: // Caso en el que el cliente quiere crear partida.
+				crearPartida(nombreJugador, cliente);
+				break;
+
+			case COMANDO_UNIRSE_PARTIDA: // Caso en el que el cliente quiere unirse a una partida.					
+				int numPartidas = partidasActivas.size();
+				out.writeByte(numPartidas);
+				
+				if (numPartidas > 0) {
+					out.writeBytes(mostrarPartidasActivas());
+					int partidaElegida = in.readInt() - 1; // Seleccion del indice correspondiente a la partida elegida por el cliente.
+					unirsePartida(nombreJugador, cliente, partidaElegida);
+				}
+				
+				// Si el número de partidas es 0, el cliente debe escoger alguna otra opción.
+				Comando nuevoComando = Comando.getComando(in.readInt());
+				procesarComando(nuevoComando);
+				break;
+
+			case COMANDO_SALIR: // Caso en el que el cliente quiere salir.
+				cliente.close();
+				break;
 			}
 		}
 	}
