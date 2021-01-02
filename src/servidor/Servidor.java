@@ -26,7 +26,7 @@ public class Servidor {
 	private static int leidos;
 
 	private static List<Partida> partidas = new ArrayList<>();
-	private static List<Partida> partidasJugables = new ArrayList<>();
+	private static List<Partida> partidasActivas = new ArrayList<>();
 
 	public static void main(String[] args) {
 		int opcionRecibida;
@@ -34,37 +34,36 @@ public class Servidor {
 			ExecutorService pool = Executors.newCachedThreadPool();
 
 			while (true) {
-				actualizarPartidasJugables();
+				actualizarPartidasActivas();
 				
 				try (Socket cliente = server.accept(); // Establecemos la conexion con 1 cliente.
 						DataInputStream in = new DataInputStream(cliente.getInputStream());
 						DataOutputStream out = new DataOutputStream(cliente.getOutputStream())) {
-
+					
 					out.writeByte(COMANDO_MOSTRAR_MENU); // El servidor escribe al cliente, para que éste muestre el menu.
-					opcionRecibida = in.read();
+					opcionRecibida = in.readInt();
+					String nombreJugador = in.readLine(); // Leer el nombre del jugador que se ha conectado.
+					
 					switch (opcionRecibida) {
 					case COMANDO_CREAR_PARTIDA: // Caso en el que el cliente quiere crear partida.
-						crearPartida(in, cliente);
+						crearPartida(nombreJugador, cliente);
 						break;
 
-					case COMANDO_UNIRSE_PARTIDA: // Caso en el que el cliente quiere unirse a una partida.
-						int numPartidas = partidasJugables.size();
+					case COMANDO_UNIRSE_PARTIDA: // Caso en el que el cliente quiere unirse a una partida.					
+						int numPartidas = partidasActivas.size();
 						out.writeByte(numPartidas);
 						if (numPartidas > 0) {
-							out.writeBytes(mostrarPartidasJugables());
+							out.writeBytes(mostrarPartidasActivas());
 						}
-
-						System.out.println(in.readLine());
-//						int partidaElegida = Integer.parseInt();
-//						partidasJugables.get(partidaElegida - 1).addJugador(new Jugador("segundo", cliente));
-//						partidasJugables.get(partidaElegida - 1).mostrar();
+						
+						int partidaElegida = in.readInt() - 1; // Seleccion del indice correspondiente a la partida elegida por el cliente.
+						unirsePartida(nombreJugador, cliente, partidaElegida);
 						
 						break;
 
 					case COMANDO_SALIR: // Caso en el que el cliente quiere salir.
 
 						break;
-
 					}
 					
 				} catch (IOException e) {
@@ -78,26 +77,43 @@ public class Servidor {
 		}
 	}
 	
-	public static void crearPartida(DataInputStream in, Socket cliente) throws IOException {
+	// PRE: nombre != null, cliente != null, partidas != null, partidasActivas != null.
+	// POS: crea una nueva partida del juego del ahorcado. Crea un nuevo jugador de nombre
+	// POS: "nombre" y le asigna el socket por el que se comunica con el servidor.
+	// POS: añade la partida a la lista de partidas y a la lista de partidas activas.
+	public static void crearPartida(String nombre, Socket cliente) throws IOException {
 		Partida partida = new Partida();
-		partida.addJugador(new Jugador(in.readLine(), cliente));
+		partida.addJugador(new Jugador(nombre, cliente));
 		partidas.add(partida);
-		partidasJugables.add(partida);
+		partidasActivas.add(partida);
 	}
 	
-	public static String mostrarPartidasJugables() {
+	// PRE: nombre != null, cliente != null, partida >= 0.
+	// POS: añade a la partida activa elegida por el indice "partida" a un nuevo jugador
+	// POS: de nombre "nombre", junto con el socket por el que se comunica con el servidor. 
+	public static void unirsePartida(String nombre, Socket cliente, int partida) {
+		partidasActivas.get(partida).addJugador(new Jugador(nombre, cliente));
+		partidasActivas.get(partida).mostrar();
+	}
+	
+	// PRE:
+	// POS: devuelve una String que contiene el estado de las partidas activas.
+	// POS: Cada partida activa se muestra en una linea diferente.
+	public static String mostrarPartidasActivas() {
 		String listadoPartidas = "";
-		for (int i = 1; i <= partidasJugables.size(); i++) {
-			listadoPartidas += i + ". " + partidasJugables.get(i - 1).estadoPartida() + "\n";
+		for (Partida p : partidasActivas) {
+			listadoPartidas += p.estadoPartida() + "\n";
 		}
 		
 		return (listadoPartidas + "\r\n");
 	}
 	
-	public static void actualizarPartidasJugables() {
+	// PRE: 
+	// POS: elimina de la lista de partidas activas aquellas que ya hayan finalizado.
+	public static void actualizarPartidasActivas() {
 		for (Partida p : partidas) {
 			if (p.partidaAcabada()) {
-				partidasJugables.remove(p);
+				partidasActivas.remove(p);
 			}
 		}
 	}

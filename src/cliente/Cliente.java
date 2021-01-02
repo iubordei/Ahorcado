@@ -17,6 +17,8 @@ public class Cliente {
 	private static final int COMANDO_UNIRSE_PARTIDA = 5;
 	private static final int COMANDO_SALIR = 6;
 	private static final int COMANDO_INTRODUCIR_LETRA = 7;
+	
+	private static Scanner scanner = new Scanner(System.in);
 
 	private static final String TEXTO_MENU = "" + "Bienvenido al ahoracado %s\r\n" + "¿Qué deseas hacer?\r\n\r\n"
 			+ "  - 1. Crear partida\r\n" + "  - 2. Unirse a una partida\r\n" + "  - 3. Salir\r\n";
@@ -25,8 +27,6 @@ public class Cliente {
 
 	private static final String TEXTO_NO_HAY_PARTIDAS_ACTIVAS = "" + "No hay partidas activas. ¿Quieres crear una?\r\n"
 			+ "  - 1. Sí\r\n" + "  - 2. No\r\n";
-
-	private static Scanner scanner = new Scanner(System.in);
 
 	// Variables
 	private int idCliente; // atributo para asociar un cliente a un jugador.
@@ -99,9 +99,10 @@ public class Cliente {
 			opcion = COMANDO_SALIR;
 			break;
 		}
-		out.write(opcion);
+
+		out.writeInt(opcion);
 		out.writeBytes(this.nombre + "\r\n");
-		
+
 		if (opcion == COMANDO_UNIRSE_PARTIDA) {
 			unirsePartida();
 		}
@@ -127,15 +128,18 @@ public class Cliente {
 			}
 			return;
 		}
-		String linea = null;
-		while ((linea = in.readLine()) != null) {
-			System.out.println(linea);
+		
+		System.out.println("\nPartidas disponibles:");
+		for (int i = 1; i <= numPartidas; i++) {
+			System.out.println("\t" + i + ". " + in.readLine());
 		}
+		
 		// Leer el número de partida que elige el cliente.
+		System.out.println("\nIntroduce la partida a la que te quieres unir:");
 		while (opcion < 1 || opcion > numPartidas) {
 			opcion = scanner.nextInt();
 		}
-		out.writeBytes(opcion + "\r\n");
+		out.writeInt(opcion);
 	}
 
 	// Este metodo obtiene la letra o palabra (String) que el cliente ha introducido
