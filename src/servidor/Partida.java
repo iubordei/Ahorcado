@@ -1,8 +1,13 @@
 package servidor;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
+
+import comun.Comando;
 
 public class Partida implements Runnable {
 	private List<Jugador> jugadores;
@@ -17,10 +22,13 @@ public class Partida implements Runnable {
 	private long tiempoInicio;
 	private long duracionPartida;
 	private static DecimalFormat df = new DecimalFormat("0.00");
+	
+	private DataOutputStream out;
 
 	// PRE:
 	// POS: crea una nueva partida con una palabra aleatoria elegida del fichero de palabras.
-	public Partida() {
+	public Partida(DataOutputStream out) {
+		this.out = out;
 		this.palabra = Palabra.generarPalabra();
 		this.jugadores = new ArrayList<>();
 		this.vectorSolucion = new char[palabra.length()];
@@ -87,7 +95,7 @@ public class Partida implements Runnable {
 	// POS: si s es un sólo caracter, comprueba que pertenezca a la solución o si ya ha sido escrita,
 	// POS: y si sí pertenece o no ha sido ya escrito, lo añade
 	// POS: al vector de la solución (actualizando el número de aciertos).
-	public void jugarLetra(String s) {
+	public void jugarLetra(String s, Jugador jugador) {
 		if (s.length() > 1) {
 			if (s.compareToIgnoreCase(palabra) == 0) {
 				this.vectorSolucion = this.vectorPalabraInicio;
@@ -95,12 +103,13 @@ public class Partida implements Runnable {
 
 			} else {
 				errores++;
+				actualizarPartida("El jugador " + jugador.getNombre() + " intenta resolver con " + s + " pero no es la solucion.");
 			}
 
 		} else {
 			if (yaEscrita(s)) {
 				errores++;
-
+				actualizarPartida("El jugador " + jugador.getNombre() + " introduce '" + s + "' pero ya se había dicho.");
 			} else {
 				if (comprobar(s)) {
 					for (int i = 0; i < palabra.length(); i++) {
@@ -109,6 +118,9 @@ public class Partida implements Runnable {
 							letrasResueltas++;
 						}
 					}
+					actualizarPartida("El jugador " + jugador.getNombre() + " introduce '" + s + "' y acierta.");
+				} else {
+					actualizarPartida("El jugador " + jugador.getNombre() + " introduce '" + s + "' y falla.");
 				}
 			}
 		}
@@ -116,25 +128,53 @@ public class Partida implements Runnable {
 		if (letrasResueltas == palabra.length()) {
 			solucionado = true;
 			acabado = true;
+			actualizarPartida("El jugador " + jugador.getNombre() + " introduce '" + s + "' y resuelve la palabra.");
 		}
 	}
 
+	private void actualizarPartida(String texto) {
+		for (Jugador j : jugadores) {
+			try {
+				StringBuilder sb = new StringBuilder();
+				sb.append(errores + " errores\n");
+				sb.append(Dibujo.dibujo(errores));
+				sb.append("\n");
+				for (char c : vectorSolucion) {
+					sb.append(c + " ");
+				}	
+				sb.append("\n\n");
+				sb.append(texto);
+				byte[] data = new byte[sb.length() + 2];
+				data[0] = (byte) Comando.COMANDO_ACTULIZACION_PARTIDA.getID();
+				data[1] = (byte) sb.length();
+				System.arraycopy(sb.toString().getBytes(), 0, data, 2, sb.length());
+				j.getOut().write(data);
+				j.getOut().flush();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
 	// PRE: la partida debe haber sido inicializada.
 	// POS: lleva a cabo una partida del juego del ahorcado, respetando los turnos
 	// POS: de los jugadores, mostrando el estado de la partida y calculando el tiempo de partida.
 	public void run() {
 		String letra;
 		while (!acabado) {
-			for (Jugador j : jugadores) {
-				if (errores < 6 && !acabado) {
-					dibujar();
-					j.mostrar();
-					letra = j.jugarTurno();
-					jugarLetra(letra);
-
-				} else {
-					duracionPartida = System.currentTimeMillis() - tiempoInicio;
+			try {
+				for (Jugador j : jugadores) {
+					if (errores < 6 && !acabado) {
+						dibujar();
+						j.mostrar();
+						letra = j.jugarTurno(vectorSolucion, errores);
+						jugarLetra(letra, j);
+					} else {
+						duracionPartida = System.currentTimeMillis() - tiempoInicio;
+					}
 				}
+			} catch (IOException e) {
+				e.printStackTrace();
+				break;
 			}
 		}
 

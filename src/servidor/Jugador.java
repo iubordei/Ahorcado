@@ -1,19 +1,28 @@
 package servidor;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.lang.reflect.Array;
 import java.net.Socket;
 import java.util.Scanner;
+
+import comun.Comando;
 
 public class Jugador {
 	private String nombre;
 	private Socket socket;
+	private DataInputStream in;
+	private DataOutputStream out;
 	
 	public Jugador() {
 		
 	}
 	
-	public Jugador(String nombre, Socket socket) {
+	public Jugador(String nombre, DataInputStream in, DataOutputStream out) {
 		this.nombre = nombre;
-		this.socket = socket;
+		this.in = in;
+		this.out = out;
 	}
 	
 	public String getNombre() {
@@ -24,19 +33,44 @@ public class Jugador {
 		this.nombre = nombre;
 	}
 
-	public Socket getSocket() {
-		return socket;
-	}
-
-	public void setSocket(Socket socket) {
-		this.socket = socket;
+//	public Socket getSocket() {
+//		return socket;
+//	}
+//
+//	public void setSocket(Socket socket) {
+//		this.socket = socket;
+//	}
+	public DataOutputStream getOut() {
+		return out;
 	}
 	
-	public String jugarTurno() {
-		String letraJugada = new String();
-
-		Scanner escaner = new Scanner(System.in);
-		letraJugada = escaner.nextLine();
+	public void setDataOutputStream(DataOutputStream newOut) {
+		out = newOut;
+	}
+	
+	public DataInputStream getIn() {
+		return in;
+	}
+	
+	public void setIn(DataInputStream newIn) {
+		this.in = newIn;
+	}
+	
+	public String jugarTurno(char[] vectorSolucion, int errores) throws IOException {
+		StringBuilder sb = new StringBuilder();
+		sb.append(errores + " errores\n");
+		sb.append(Dibujo.dibujo(errores));
+		sb.append("\n");
+		for (char c : vectorSolucion) {
+			sb.append(c + " ");
+		}
+		byte[] data = new byte[sb.length() + 2];
+		data[0] = (byte)Comando.COMANDO_TU_TURNO.getID();
+		data[1] = (byte)sb.length();
+		System.arraycopy(sb.toString().getBytes(), 0, data, 2, sb.length());
+		out.write(data);
+		out.flush();
+		String letraJugada = in.readLine();
 		if (letraJugada.compareToIgnoreCase("") == 0) {
 			return ("_");
 		} else {

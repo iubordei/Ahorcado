@@ -144,21 +144,32 @@ public class Cliente {
 	// teclado para posteriormente enviarla a través del Socket.
 	public String introducirLetra() {
 		System.out.println("Introduce la letra / palabra");
-		String letra = scanner.nextLine();
+		Scanner escaner = new Scanner(System.in);
+		String letra = escaner.nextLine();
 		return letra;
 	}
 
 	public void jugarTurno() throws IOException {
+		System.out.println("-----------------------");
+		System.out.println("Jugador " + nombre + ", es tu turno. Estado de la partida:");
+		System.out.println();
+		actualizarPartida();
 		String letra = introducirLetra();
-		out.write(Comando.COMANDO_INTRODUCIR_LETRA.getID());
 		out.writeBytes(letra + "\r\n");
 	}
 
 	public void actualizarPartida() throws IOException {
-		String linea = null;
-		while ((linea = in.readLine()) != null) {
-			System.out.println(linea);
+		int length = in.readByte();
+		byte[] buffer = new byte[1024];
+		int totalRead = 0;
+		int readBytes = 0;
+		while (totalRead < length) {
+			readBytes = in.read(buffer, totalRead, length - totalRead);
+			totalRead += readBytes;
 		}
+		System.out.println(new String(buffer));
+		System.out.println();
+		System.out.println();
 	}
 
 	// Este metodo obtiene el id de un cliente para poder relacionar lo que hace
