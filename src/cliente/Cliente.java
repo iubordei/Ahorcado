@@ -40,7 +40,7 @@ public class Cliente {
 		System.out.println(TEXTO_INTRODUCIR_NOMBRE);
 		String nombre = scanner.nextLine();
 
-		try (Socket conexion = new Socket("localhost", 10000);) // Establecemos la conexion con el servidor.
+		try (Socket conexion = new Socket("localhost", 10000)) // Establecemos la conexion con el servidor.
 		{
 			Cliente cliente = new Cliente(nombre, conexion);
 			cliente.waitForData();
@@ -68,7 +68,7 @@ public class Cliente {
 			case COMANDO_TU_TURNO:
 				jugarTurno();
 				break;
-			case COMANDO_ACTULIZACION_PARTIDA:
+			case COMANDO_ACTUALIZACION_PARTIDA:
 				actualizarPartida();
 				break;
 			}

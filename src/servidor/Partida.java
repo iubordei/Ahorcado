@@ -1,6 +1,5 @@
 package servidor;
 
-import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.text.DecimalFormat;
@@ -11,6 +10,7 @@ import comun.Comando;
 
 public class Partida implements Runnable {
 	private List<Jugador> jugadores;
+	private List<Jugador> nuevos;
 	private String palabra;
 	private String pista;
 	private char[] vectorPalabraInicio;
@@ -23,14 +23,13 @@ public class Partida implements Runnable {
 	private long duracionPartida;
 	private static DecimalFormat df = new DecimalFormat("0.00");
 	
-	private DataOutputStream out;
 
 	// PRE:
 	// POS: crea una nueva partida con una palabra aleatoria elegida del fichero de palabras.
-	public Partida(DataOutputStream out) {
-		this.out = out;
+	public Partida() {
 		this.palabra = Palabra.generarPalabra();
 		this.jugadores = new ArrayList<>();
+		this.nuevos = new ArrayList<>();
 		this.vectorSolucion = new char[palabra.length()];
 		for (int i = 0; i < palabra.length(); i++) {
 			vectorSolucion[i] = '_';
@@ -46,7 +45,11 @@ public class Partida implements Runnable {
 	// PRE: la partida debe haber sido inicializada.
 	// POS: añade al Jugador jugador a la partida actual.
 	public void addJugador(Jugador jugador) {
-		jugadores.add(jugador);
+		if (jugadores.isEmpty()) {
+			jugadores.add(jugador);
+		} else {
+			nuevos.add(jugador);
+		}
 	}
 
 	
@@ -60,7 +63,6 @@ public class Partida implements Runnable {
 	// POS: devuelve TRUE si la letra introducida está en la palabra jugada;
 	// POS: FALSE en caso contrario. Actualiza el valor del número de errores, y
 	// POS: pone el estado de la partida a finalizado si se ha alcanzado el número máximo de errores.
-	
 	public boolean comprobar(String s) {
 		for (char c : vectorPalabraInicio) {
 			if (c == s.charAt(0)) {
@@ -145,11 +147,12 @@ public class Partida implements Runnable {
 				sb.append("\n\n");
 				sb.append(texto);
 				byte[] data = new byte[sb.length() + 2];
-				data[0] = (byte) Comando.COMANDO_ACTULIZACION_PARTIDA.getID();
+				data[0] = (byte) Comando.COMANDO_ACTUALIZACION_PARTIDA.getID();
 				data[1] = (byte) sb.length();
 				System.arraycopy(sb.toString().getBytes(), 0, data, 2, sb.length());
 				j.getOut().write(data);
 				j.getOut().flush();
+				
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -172,6 +175,11 @@ public class Partida implements Runnable {
 						duracionPartida = System.currentTimeMillis() - tiempoInicio;
 					}
 				}
+				
+				if (!nuevos.isEmpty()) {
+					jugadores.addAll(nuevos);
+					nuevos.clear();
+				}
 			} catch (IOException e) {
 				e.printStackTrace();
 				break;
@@ -180,6 +188,10 @@ public class Partida implements Runnable {
 
 		mostrar();
 		dibujar();
+		
+		for (Jugador j : jugadores) {
+			j.cerrarConexion();
+		}
 	}
 
 	// PRE: la partida debe haber sido inicializada.

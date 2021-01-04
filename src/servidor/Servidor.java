@@ -7,16 +7,10 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import comun.Comando;
 
 public class Servidor {
-
-	private static byte[] buff = new byte[1024 * 32];
-	
-	private static int leidos;
 
 	private static List<Partida> partidas = new ArrayList<>();
 	private static List<Partida> partidasActivas = new ArrayList<>();
@@ -46,9 +40,9 @@ public class Servidor {
 	// POS: crea una nueva partida del juego del ahorcado. Crea un nuevo jugador de nombre
 	// POS: "nombre" y le asigna el socket por el que se comunica con el servidor.
 	// POS: añade la partida a la lista de partidas y a la lista de partidas activas.
-	public static void crearPartida(String nombre, DataInputStream in, DataOutputStream out) throws IOException {
-		Partida partida = new Partida(out);
-		partida.addJugador(new Jugador(nombre, in, out));
+	public static void crearPartida(String nombre, Socket socket, DataInputStream in, DataOutputStream out) throws IOException {
+		Partida partida = new Partida();
+		partida.addJugador(new Jugador(nombre, socket, in, out));
 		partidas.add(partida);
 		partidasActivas.add(partida);
 		partida.run();
@@ -57,9 +51,8 @@ public class Servidor {
 	// PRE: nombre != null, cliente != null, partida >= 0.
 	// POS: añade a la partida activa elegida por el indice "partida" a un nuevo jugador
 	// POS: de nombre "nombre", junto con el socket por el que se comunica con el servidor. 
-	public static void unirsePartida(String nombre, DataInputStream in, DataOutputStream out, int partida) {
-		partidasActivas.get(partida).addJugador(new Jugador(nombre, in, out));
-		partidasActivas.get(partida).mostrar();
+	public static void unirsePartida(String nombre, Socket socket, DataInputStream in, DataOutputStream out, int partida) {
+		partidasActivas.get(partida).addJugador(new Jugador(nombre, socket, in, out));
 	}
 	
 	// PRE:
@@ -87,7 +80,6 @@ public class Servidor {
 	
 	private static class ClasificarCliente extends Thread {
 		private Socket cliente;
-		
 		private DataInputStream in;
 		private DataOutputStream out;
 		
@@ -97,7 +89,7 @@ public class Servidor {
 		 * Constructor de clase. Instancia una clase del tipo {@code ClasificarCliente}
 		 * con los argumentos proporcionados.
 		 * 
-		 * @param cliente Socket a clasificar.
+		 * @param socket del cliente a clasificar.
 		 */
 		public ClasificarCliente(Socket cliente) {
 			this.cliente = cliente;
@@ -120,6 +112,7 @@ public class Servidor {
 				
 				// Procesa el comando que el cliente ha escogido.
 				procesarComando(comando);
+				
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -135,7 +128,7 @@ public class Servidor {
 		private void procesarComando(Comando comando) throws IOException {
 			// Si el comando a procesar no existe, el cliente deberá introducir un nuevo comando.
 			if (comando == null) {
-				// TODO: Indicar al cliente que el comando introducido no existe?
+				// TODO: Indicar al cliente que el comando introducido no existe
 				Comando nuevoComando = Comando.getComando(in.readInt());
 				procesarComando(nuevoComando);
 				return;
@@ -143,7 +136,7 @@ public class Servidor {
 				
 			switch (comando) {
 			case COMANDO_CREAR_PARTIDA: // Caso en el que el cliente quiere crear partida.
-				crearPartida(nombreJugador, in, out);
+				crearPartida(nombreJugador, cliente, in, out);
 				break;
 
 			case COMANDO_UNIRSE_PARTIDA: // Caso en el que el cliente quiere unirse a una partida.					
@@ -153,13 +146,15 @@ public class Servidor {
 				if (numPartidas > 0) {
 					out.writeBytes(mostrarPartidasActivas());
 					int partidaElegida = in.readInt() - 1; // Seleccion del indice correspondiente a la partida elegida por el cliente.
-					unirsePartida(nombreJugador, in, out, partidaElegida);
+					unirsePartida(nombreJugador, cliente, in, out, partidaElegida);
+					break;
 				}
 				
 				// Si el número de partidas es 0, el cliente debe escoger alguna otra opción.
 				Comando nuevoComando = Comando.getComando(in.readInt());
 				procesarComando(nuevoComando);
 				break;
+				
 			case COMANDO_SALIR: // Caso en el que el cliente quiere salir.
 				cliente.close();
 				break;

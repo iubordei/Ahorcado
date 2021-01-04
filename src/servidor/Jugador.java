@@ -19,8 +19,9 @@ public class Jugador {
 		
 	}
 	
-	public Jugador(String nombre, DataInputStream in, DataOutputStream out) {
+	public Jugador(String nombre, Socket socket, DataInputStream in, DataOutputStream out) {
 		this.nombre = nombre;
+		this.socket = socket;
 		this.in = in;
 		this.out = out;
 	}
@@ -85,5 +86,13 @@ public class Jugador {
 	public void mostrar() {
 		System.out.println(this);
 	}
-
+	
+	public void cerrarConexion() {
+		try {
+			this.socket.close();
+			
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 }
