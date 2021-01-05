@@ -100,13 +100,13 @@ public class Partida extends Thread {
 
 			} else {
 				errores++;
-				actualizarPartida("El jugador " + jugador.getNombre() + " intenta resolver con " + s + " pero no es la solucion.");
+				actualizarPartida("El jugador " + jugador.getNombre() + " intenta resolver con " + s + " pero no es la solucion.", true);
 			}
 
 		} else {
 			if (yaEscrita(s)) {
 				errores++;
-				actualizarPartida("El jugador " + jugador.getNombre() + " introduce '" + s + "' pero ya se había dicho.");
+				actualizarPartida("El jugador " + jugador.getNombre() + " introduce '" + s + "' pero ya se había dicho.", true);
 			} else {
 				if (comprobar(s)) {
 					for (int i = 0; i < palabra.length(); i++) {
@@ -115,9 +115,9 @@ public class Partida extends Thread {
 							letrasResueltas++;
 						}
 					}
-					actualizarPartida("El jugador " + jugador.getNombre() + " introduce '" + s + "' y acierta.");
+					actualizarPartida("El jugador " + jugador.getNombre() + " introduce '" + s + "' y acierta.", true);
 				} else {
-					actualizarPartida("El jugador " + jugador.getNombre() + " introduce '" + s + "' y falla.");
+					actualizarPartida("El jugador " + jugador.getNombre() + " introduce '" + s + "' y falla.", true);
 				}
 			}
 		}
@@ -125,22 +125,24 @@ public class Partida extends Thread {
 		if (letrasResueltas == palabra.length()) {
 			solucionado = true;
 			acabado = true;
-			actualizarPartida("El jugador " + jugador.getNombre() + " introduce '" + s + "' y resuelve la palabra.");
+			actualizarPartida("El jugador " + jugador.getNombre() + " introduce '" + s + "' y resuelve la palabra.", true);
 		}
 	}
 
-	private void actualizarPartida(String texto) {
+	private void actualizarPartida(String texto, boolean mandarErrores) {
 		synchronized (jugadores) {
 			for (Jugador j : jugadores) {
 				try {
 					StringBuilder sb = new StringBuilder();
-					sb.append(errores + " errores\n");
-					sb.append(Dibujo.dibujo(errores));
-					sb.append("\n");
-					for (char c : vectorSolucion) {
-						sb.append(c + " ");
-					}	
-					sb.append("\n\n");
+					if (mandarErrores) {
+						sb.append(errores + " errores\n");
+						sb.append(Dibujo.dibujo(errores));
+						sb.append("\n");
+						for (char c : vectorSolucion) {
+							sb.append(c + " ");
+						}	
+						sb.append("\n\n");
+					}
 					sb.append(texto);
 					byte[] data = new byte[sb.length() + 2];
 					data[0] = (byte) Comando.COMANDO_ACTUALIZACION_PARTIDA.getID();
@@ -148,38 +150,55 @@ public class Partida extends Thread {
 					System.arraycopy(sb.toString().getBytes(), 0, data, 2, sb.length());
 					j.getOut().write(data);
 					j.getOut().flush();
-				
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
 			}
 		}
 	}
+	
 	// PRE: la partida debe haber sido inicializada.
 	// POS: lleva a cabo una partida del juego del ahorcado, respetando los turnos
 	// POS: de los jugadores, mostrando el estado de la partida y calculando el tiempo de partida.
 	public void run() {
 		String letra;
 		while (!acabado) {
-			try {
-				synchronized (jugadores) {
-					for (Jugador j : jugadores) {
+			List<Jugador> desconectados = new ArrayList<Jugador>();
+			synchronized (jugadores) {
+				for (Jugador j : jugadores) {
+					try {
 						if (errores < 6 && !acabado) {
-//							dibujar();
+							actualizarPartida("-----------------------\nJugador " + j.getNombre() + ", es tu turno. Estado de la partida:", false);
 							letra = j.jugarTurno(vectorSolucion, errores);
 							jugarLetra(letra, j);
 						}
+					} catch (IOException e) {
+						desconectados.add(j);
 					}
 				}
-				
-				if (!nuevos.isEmpty()) {
-					jugadores.addAll(nuevos);
-					nuevos.clear();
-				}
-			} catch (IOException e) {
-				e.printStackTrace();
 			}
+
+			for (Jugador jugador : desconectados) {
+				jugador.cerrarConexion();
+				jugadores.remove(jugador);
+			}
+			
+			for (Jugador jugador : desconectados) 
+				actualizarPartida("El jugador " + jugador.getNombre() + " se ha desconectado de la partida.", false);
+			
+			
+			if (!nuevos.isEmpty()) {
+				actualizarPartida("Se ha unido a la partida " + nuevos.size() + " jugador/es: " + getNombresJugadores(nuevos), false);
+				for (Jugador nuevoJugador: nuevos) {
+					jugadores.add(0, nuevoJugador);
+				}
+				nuevos.clear();
+			}
+			
+			if (jugadores.isEmpty())
+				break;
 		}
+		actualizarPartida("LA PARTIDA HA FINALIZADO", false);
 
 //		mostrar();
 //		dibujar();
@@ -203,14 +222,20 @@ public class Partida extends Thread {
 		return (this.acabado);
 	}
 	
+	public String getNombresJugadores(List<Jugador> jugadores) {
+		String nombres = "";
+		
+		for (Jugador jugador : jugadores) {
+			nombres += "\n  - " + jugador.getNombre();
+		}
+		return nombres;
+	}
+	
 	public String estadoPartida() {
 		String estado = "";
-		estado += "Errores: " + errores + "; ";
-		estado += "Estado de la resolución: ";
-		for (int i = 0; i < palabra.length(); i++) {
-			estado += vectorSolucion[i] + " ";
-		}
-		
+		estado += "Lider de la partida: " + jugadores.get(0).getNombre() + " - ";
+		estado += "Número de jugadores: " + jugadores.size() + " - ";
+		estado += "Errores: " + errores;
 		return (estado);
 	}
 

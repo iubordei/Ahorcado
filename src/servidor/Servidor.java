@@ -64,7 +64,7 @@ public class Servidor {
 			listadoPartidas += p.estadoPartida() + "\n";
 		}
 		
-		return (listadoPartidas + "\r\n");
+		return (listadoPartidas);
 	}
 	
 	// PRE: 
@@ -128,7 +128,6 @@ public class Servidor {
 		private void procesarComando(Comando comando) throws IOException {
 			// Si el comando a procesar no existe, el cliente deberá introducir un nuevo comando.
 			if (comando == null) {
-				// TODO: Indicar al cliente que el comando introducido no existe
 				Comando nuevoComando = Comando.getComando(in.readInt());
 				procesarComando(nuevoComando);
 				return;

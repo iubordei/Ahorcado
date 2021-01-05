@@ -15,7 +15,7 @@ public enum Comando {
 	
 	private final int id;
 	
-	// Genera un mapa que asocie IDs con comandos.
+	//  Genera un mapa que asocie IDs con comandos.
 	private static final Map<Integer, Comando> lookup = new HashMap<>();
     static
     {

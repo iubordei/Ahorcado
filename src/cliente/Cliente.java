@@ -140,6 +140,7 @@ public class Cliente {
 		}
 		out.writeInt(opcion);
 		out.flush();
+		System.out.println("Partida en curso, espera a tu turno");
 	}
 
 	// Este metodo obtiene la letra o palabra (String) que el cliente ha introducido
@@ -153,9 +154,6 @@ public class Cliente {
 	}
 
 	public void jugarTurno() throws IOException {
-		System.out.println("-----------------------");
-		System.out.println("Jugador " + nombre + ", es tu turno. Estado de la partida:");
-		System.out.println();
 		actualizarPartida();
 		String letra = introducirLetra();
 		out.writeBytes(letra + "\r\n");
