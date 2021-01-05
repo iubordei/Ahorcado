@@ -67,7 +67,7 @@ public class Jugador {
 		}
 		byte[] data = new byte[sb.length() + 2];
 		data[0] = (byte)Comando.COMANDO_TU_TURNO.getID();
-		data[1] = (byte)sb.length();
+		data[1] = (byte) (sb.length() & 0xFF);
 		System.arraycopy(sb.toString().getBytes(), 0, data, 2, sb.length());
 		out.write(data);
 		out.flush();

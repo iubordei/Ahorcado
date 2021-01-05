@@ -99,6 +99,7 @@ public class Cliente {
 
 		out.writeInt(opcion);
 		out.writeBytes(this.nombre + "\r\n");
+		out.flush();
 
 		if (opcion == Comando.COMANDO_UNIRSE_PARTIDA.getID()) {
 			unirsePartida();
@@ -119,6 +120,7 @@ public class Cliente {
 			case 1:
 				out.writeInt(Comando.COMANDO_CREAR_PARTIDA.getID()); // si quieres crear partida le envias al servidor un 1 indicando que
 													// quieres crear una partida.
+				out.flush();
 				break;
 			default:
 				mostrarMenu(); // si no quieres crear partida, vuelves al menu inicial.
@@ -137,6 +139,7 @@ public class Cliente {
 			opcion = scanner.nextInt();
 		}
 		out.writeInt(opcion);
+		out.flush();
 	}
 
 	// Este metodo obtiene la letra o palabra (String) que el cliente ha introducido
@@ -156,10 +159,11 @@ public class Cliente {
 		actualizarPartida();
 		String letra = introducirLetra();
 		out.writeBytes(letra + "\r\n");
+		out.flush();
 	}
 
 	public void actualizarPartida() throws IOException {
-		int length = in.readByte();
+		int length = in.readByte() & 0xFF;
 		byte[] buffer = new byte[1024];
 		int totalRead = 0;
 		int readBytes = 0;

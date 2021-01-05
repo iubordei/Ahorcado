@@ -130,26 +130,28 @@ public class Partida extends Thread {
 	}
 
 	private void actualizarPartida(String texto) {
-		for (Jugador j : jugadores) {
-			try {
-				StringBuilder sb = new StringBuilder();
-				sb.append(errores + " errores\n");
-				sb.append(Dibujo.dibujo(errores));
-				sb.append("\n");
-				for (char c : vectorSolucion) {
-					sb.append(c + " ");
-				}	
-				sb.append("\n\n");
-				sb.append(texto);
-				byte[] data = new byte[sb.length() + 2];
-				data[0] = (byte) Comando.COMANDO_ACTUALIZACION_PARTIDA.getID();
-				data[1] = (byte) sb.length();
-				System.arraycopy(sb.toString().getBytes(), 0, data, 2, sb.length());
-				j.getOut().write(data);
-				j.getOut().flush();
+		synchronized (jugadores) {
+			for (Jugador j : jugadores) {
+				try {
+					StringBuilder sb = new StringBuilder();
+					sb.append(errores + " errores\n");
+					sb.append(Dibujo.dibujo(errores));
+					sb.append("\n");
+					for (char c : vectorSolucion) {
+						sb.append(c + " ");
+					}	
+					sb.append("\n\n");
+					sb.append(texto);
+					byte[] data = new byte[sb.length() + 2];
+					data[0] = (byte) Comando.COMANDO_ACTUALIZACION_PARTIDA.getID();
+					data[1] = (byte) (sb.length() & 0xFF);
+					System.arraycopy(sb.toString().getBytes(), 0, data, 2, sb.length());
+					j.getOut().write(data);
+					j.getOut().flush();
 				
-			} catch (IOException e) {
-				e.printStackTrace();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
 			}
 		}
 	}
@@ -160,11 +162,13 @@ public class Partida extends Thread {
 		String letra;
 		while (!acabado) {
 			try {
-				for (Jugador j : jugadores) {
-					if (errores < 6 && !acabado) {
-//						dibujar();
-						letra = j.jugarTurno(vectorSolucion, errores);
-						jugarLetra(letra, j);
+				synchronized (jugadores) {
+					for (Jugador j : jugadores) {
+						if (errores < 6 && !acabado) {
+//							dibujar();
+							letra = j.jugarTurno(vectorSolucion, errores);
+							jugarLetra(letra, j);
+						}
 					}
 				}
 				
