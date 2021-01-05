@@ -1,14 +1,12 @@
 package servidor;
 
-import java.io.DataOutputStream;
 import java.io.IOException;
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 
 import comun.Comando;
 
-public class Partida implements Runnable {
+public class Partida extends Thread {
 	private List<Jugador> jugadores;
 	private List<Jugador> nuevos;
 	private String palabra;
@@ -19,9 +17,6 @@ public class Partida implements Runnable {
 	private boolean solucionado;
 	private int errores;
 	private int letrasResueltas;
-	private long tiempoInicio;
-	private long duracionPartida;
-	private static DecimalFormat df = new DecimalFormat("0.00");
 	
 
 	// PRE:
@@ -38,8 +33,8 @@ public class Partida implements Runnable {
 		errores = 0;
 		letrasResueltas = 0;
 		acabado = false;
+		solucionado = false;
 		vectorPalabraInicio = convertir();
-		tiempoInicio = System.currentTimeMillis();
 	}
 
 	// PRE: la partida debe haber sido inicializada.
@@ -73,8 +68,8 @@ public class Partida implements Runnable {
 		errores++;
 		if (errores == 6) {
 			acabado = true;
-			solucionado = false;
 		}
+		
 		return (false);
 	}
 
@@ -167,12 +162,9 @@ public class Partida implements Runnable {
 			try {
 				for (Jugador j : jugadores) {
 					if (errores < 6 && !acabado) {
-						dibujar();
-						j.mostrar();
+//						dibujar();
 						letra = j.jugarTurno(vectorSolucion, errores);
 						jugarLetra(letra, j);
-					} else {
-						duracionPartida = System.currentTimeMillis() - tiempoInicio;
 					}
 				}
 				
@@ -182,12 +174,11 @@ public class Partida implements Runnable {
 				}
 			} catch (IOException e) {
 				e.printStackTrace();
-				break;
 			}
 		}
 
-		mostrar();
-		dibujar();
+//		mostrar();
+//		dibujar();
 		
 		for (Jugador j : jugadores) {
 			j.cerrarConexion();
@@ -238,7 +229,6 @@ public class Partida implements Runnable {
 
 		partida += (solucionado ? "Se ha completado" : "No se ha completado") + "\n";
 		partida += (solucionado ? "Errores: " + errores + "\n" : "");
-		partida += "Tiempo jugado: " + df.format((double) (duracionPartida / 1000)) + "s";
 
 		return (partida);
 	}

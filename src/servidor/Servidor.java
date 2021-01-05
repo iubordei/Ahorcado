@@ -45,7 +45,7 @@ public class Servidor {
 		partida.addJugador(new Jugador(nombre, socket, in, out));
 		partidas.add(partida);
 		partidasActivas.add(partida);
-		partida.run();
+		partida.start();
 	}
 	
 	// PRE: nombre != null, cliente != null, partida >= 0.

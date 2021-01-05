@@ -71,11 +71,11 @@ public class Jugador {
 		System.arraycopy(sb.toString().getBytes(), 0, data, 2, sb.length());
 		out.write(data);
 		out.flush();
-		String letraJugada = in.readLine();
-		if (letraJugada.compareToIgnoreCase("") == 0) {
+		String turno = in.readLine();
+		if (turno.compareToIgnoreCase("") == 0) {
 			return ("_");
 		} else {
-			return (letraJugada);
+			return (turno);
 		}
 	}
 
