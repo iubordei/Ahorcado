@@ -3,13 +3,15 @@ package servidor;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.lang.reflect.Array;
+import java.io.Serializable;
 import java.net.Socket;
-import java.util.Scanner;
+
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlTransient;
 
 import comun.Comando;
 
-public class Jugador {
+public class Jugador implements Serializable {
 	private String nombre;
 	private Socket socket;
 	private DataInputStream in;
@@ -26,6 +28,7 @@ public class Jugador {
 		this.out = out;
 	}
 	
+	@XmlElement(name = "nombre")
 	public String getNombre() {
 		return nombre;
 	}
@@ -33,28 +36,32 @@ public class Jugador {
 	public void setNombre(String nombre) {
 		this.nombre = nombre;
 	}
+	
+	@XmlTransient
+	public Socket getSocket() {
+		return socket;
+	}
 
-//	public Socket getSocket() {
-//		return socket;
-//	}
-//
-//	public void setSocket(Socket socket) {
-//		this.socket = socket;
-//	}
-	public DataOutputStream getOut() {
-		return out;
+	public void setSocket(Socket socket) {
+		this.socket = socket;
 	}
-	
-	public void setDataOutputStream(DataOutputStream newOut) {
-		out = newOut;
-	}
-	
+
+	@XmlTransient
 	public DataInputStream getIn() {
 		return in;
 	}
 	
 	public void setIn(DataInputStream newIn) {
 		this.in = newIn;
+	}
+
+	@XmlTransient
+	public DataOutputStream getOut() {
+		return out;
+	}
+	
+	public void setOut(DataOutputStream newOut) {
+		out = newOut;
 	}
 	
 	public String jugarTurno(char[] vectorSolucion, int errores) throws IOException {

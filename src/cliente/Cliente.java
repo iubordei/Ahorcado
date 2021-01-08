@@ -9,7 +9,7 @@ import java.util.Scanner;
 import comun.Comando;
 
 public class Cliente {
-
+	// Constantes.
 	private static Scanner scanner = new Scanner(System.in);
 
 	private static final String TEXTO_MENU = "" + "Bienvenido al ahoracado %s\r\n" + "¿Qué deseas hacer?\r\n\r\n"
@@ -20,7 +20,7 @@ public class Cliente {
 	private static final String TEXTO_NO_HAY_PARTIDAS_ACTIVAS = "" + "No hay partidas activas. ¿Quieres crear una?\r\n"
 			+ "  - 1. Sí\r\n" + "  - 2. No\r\n";
 
-	// Variables
+	// Variables.
 	private int idCliente; // atributo para asociar un cliente a un jugador.
 	private int idPartida; // atributo para unir un cliente a una partida.
 	private String nombre;
@@ -28,6 +28,9 @@ public class Cliente {
 	private DataInputStream in;
 	private DataOutputStream out;
 
+	// PRE: nombre != null, socket != null.
+	// POS: crea un objeto de tipo Cliente con nombre = "nombre" y socket =
+	// POS: "socket".
 	public Cliente(String nombre, Socket socket) throws IOException {
 		this.idCliente = (int) System.currentTimeMillis();
 		this.nombre = nombre;
@@ -50,6 +53,8 @@ public class Cliente {
 		}
 	}
 
+	// PRE: el objeto de tipo Cliente debe haber sido inicializado previamente.
+	// POS:
 	public void waitForData() throws IOException {
 		int commandID = -1;
 
@@ -57,7 +62,7 @@ public class Cliente {
 			Comando comando = Comando.getComando(commandID);
 			if (comando == null)
 				return;
-			
+
 			switch (comando) {
 			case COMANDO_MOSTRAR_MENU:
 				mostrarMenu();
@@ -75,8 +80,9 @@ public class Cliente {
 		}
 	}
 
-	// Este metodo muestra el menu de opciones iniciales del cliente y retorna la
-	// opcion escogida por el cliente.
+	// PRE: el objeto de tipo Cliente debe haber sido inicializado previamente.
+	// POS: muestra el menú de opciones iniciales del cliente y retorna
+	// POS: la opcion elegida por el cliente.
 	private void mostrarMenu() throws IOException {
 		// Enseñar el menu y leer la opción que elige el cliente.
 		int opcion = -1;
@@ -106,8 +112,9 @@ public class Cliente {
 		}
 	}
 
-	// Este metodo muestra todas las partidas activas y retorna un entero que indica
-	// la partida a la que quiere unirse el cliente.
+	// PRE: el objeto de tipo Cliente debe haber sido inicializado previamente.
+	// POS: muestra todas las partidas activas y retorna un número entero que indica
+	// POS: la partida a la que quiere unirse el cliente.
 	private void unirsePartida() throws IOException {
 		// Enseñar todas las partidas.
 		int numPartidas = 0;
@@ -118,8 +125,9 @@ public class Cliente {
 			opcion = scanner.nextInt();
 			switch (opcion) {
 			case 1:
-				out.writeInt(Comando.COMANDO_CREAR_PARTIDA.getID()); // si quieres crear partida le envias al servidor un 1 indicando que
-													// quieres crear una partida.
+				out.writeInt(Comando.COMANDO_CREAR_PARTIDA.getID()); // si quieres crear partida le envias al servidor
+																		// un 1 indicando que
+				// quieres crear una partida.
 				out.flush();
 				break;
 			default:
@@ -127,12 +135,12 @@ public class Cliente {
 			}
 			return;
 		}
-		
+
 		System.out.println("\nPartidas disponibles:");
 		for (int i = 1; i <= numPartidas; i++) {
 			System.out.println("\t" + i + ". " + in.readLine());
 		}
-		
+
 		// Leer el número de partida que elige el cliente.
 		System.out.println("\nIntroduce la partida a la que te quieres unir:");
 		while (opcion < 1 || opcion > numPartidas) {
@@ -143,9 +151,9 @@ public class Cliente {
 		System.out.println("Partida en curso, espera a tu turno");
 	}
 
-	// Este metodo obtiene la letra o palabra (String) que el cliente ha introducido
-	// por
-	// teclado para posteriormente enviarla a través del Socket.
+	// PRE: el objeto de tipo Cliente debe haber sido inicializado previamente.
+	// POS: obtiene la letra o palabra (String) que el cliente ha introducido
+	// POS: por teclado para posteriormente enviarla a través del Socket.
 	public String introducirLetra() {
 		System.out.println("Introduce la letra / palabra");
 		Scanner escaner = new Scanner(System.in);
@@ -153,6 +161,10 @@ public class Cliente {
 		return letra;
 	}
 
+	// PRE: el objeto de tipo Cliente debe haber sido inicializado previamente.
+	// POS: actualiza la visión de la Partida al cliente y recoge la letra o
+	// POS: palabra jugada en este turno por el Cliente. Comunica esta información
+	// POS: con la Partida en la que está jugando.
 	public void jugarTurno() throws IOException {
 		actualizarPartida();
 		String letra = introducirLetra();
@@ -160,6 +172,9 @@ public class Cliente {
 		out.flush();
 	}
 
+	// PRE: el objeto de tipo Cliente debe haber sido inicializado previamente.
+	// POS: muestra por pantalla al Cliente una actualización de la Partida de
+	// POS: la que forma parte.
 	public void actualizarPartida() throws IOException {
 		int length = in.readByte() & 0xFF;
 		byte[] buffer = new byte[1024];
@@ -174,24 +189,29 @@ public class Cliente {
 		System.out.println();
 	}
 
-	// Este metodo obtiene el id de un cliente para poder relacionar lo que hace
-	// este cliente con el correspondiente jugdor.
+	// PRE: el objeto de tipo Cliente debe haber sido inicializado previamente.
+	// POS: obtiene el id de un cliente para poder relacionar lo que hace
+	// POS: este cliente con su correspondiente jugdor.
 	public int getIdCliente() {
 		return idCliente;
 	}
 
-	// Este metodo obtiene el nombre del cliente.
+	// PRE: el objeto de tipo Cliente debe haber sido inicializado previamente.
+	// POS: obtiene el nombre del cliente.
 	public String getNombre() {
 		return nombre;
 	}
 
-	// Este metodo obtiene el idPartida de un cliente.
+	// PRE: el objeto de tipo Cliente debe haber sido inicializado previamente.
+	// POS: obtiene el idPartida de un cliente.
 	public int getIdPartida() {
 		return idPartida;
 	}
 
+	// PRE: el objeto de tipo Cliente debe haber sido inicializado previamente.
+	// POS: devuelve una String que representa al objeto Cliente actual.
 	public String toString() {
-		return "Nombre: " + nombre + ", partida: " + idPartida;
+		return ("Nombre: " + nombre + ", partida: " + idPartida);
 	}
 
 }
