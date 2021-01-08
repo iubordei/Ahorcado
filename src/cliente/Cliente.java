@@ -54,7 +54,7 @@ public class Cliente {
 	}
 
 	// PRE: el objeto de tipo Cliente debe haber sido inicializado previamente.
-	// POS:
+	// POS: el cliente se queda esperando a que le llegue un comando.
 	public void waitForData() throws IOException {
 		int commandID = -1;
 

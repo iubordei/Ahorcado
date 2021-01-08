@@ -17,10 +17,14 @@ public class Jugador implements Serializable {
 	private DataInputStream in;
 	private DataOutputStream out;
 	
+	// PRE:
+	// POS: construye un objeto de tipo Jugado.
 	public Jugador() {
 		
 	}
 	
+	// PRE:
+	// POS: construye un objeto de tipo Jugado.
 	public Jugador(String nombre, Socket socket, DataInputStream in, DataOutputStream out) {
 		this.nombre = nombre;
 		this.socket = socket;
@@ -28,42 +32,60 @@ public class Jugador implements Serializable {
 		this.out = out;
 	}
 	
+	// PRE: El jugador debe haber sido inicializado
+	// POS: devuelve el nombre del jugador.
 	@XmlElement(name = "nombre")
 	public String getNombre() {
 		return nombre;
 	}
 	
+	// PRE: El jugador debe haber sido inicializado
+	// POS: establece el nombre del jugador.
 	public void setNombre(String nombre) {
 		this.nombre = nombre;
 	}
 	
+	// PRE: El jugador debe haber sido inicializado
+	// POS: devuelve el socket del jugador.
 	@XmlTransient
 	public Socket getSocket() {
 		return socket;
 	}
 
+	// PRE: El jugador debe haber sido inicializado
+	// POS: establece el socket del jugador.
 	public void setSocket(Socket socket) {
 		this.socket = socket;
 	}
 
+	// PRE: El jugador debe haber sido inicializado
+	// POS: devuelve el DataInputStream del jugador.
 	@XmlTransient
 	public DataInputStream getIn() {
 		return in;
 	}
 	
+	// PRE: El jugador debe haber sido inicializado
+	// POS: establece el DataInputStream del jugador.
 	public void setIn(DataInputStream newIn) {
 		this.in = newIn;
 	}
 
+	// PRE: El jugador debe haber sido inicializado
+	// POS: devuelve el DataOutputStream del jugador.
 	@XmlTransient
 	public DataOutputStream getOut() {
 		return out;
 	}
 	
+	// PRE: El jugador debe haber sido inicializado
+	// POS: establece el DataOutputStream del jugador.
 	public void setOut(DataOutputStream newOut) {
 		out = newOut;
 	}
 	
+	//  PRE: El jugador debe haber sido inicializado y esta en una partida
+	//  POS: el jugador juega su turno durante la partida.
 	public String jugarTurno(char[] vectorSolucion, int errores) throws IOException {
 		StringBuilder sb = new StringBuilder();
 		sb.append(errores + " errores\n");
@@ -86,14 +108,20 @@ public class Jugador implements Serializable {
 		}
 	}
 
+	//  PRE: El jugador debe haber sido inicializado
+	//  POS: devuelve una String que representa al jugador
 	public String toString() {
 		return "Nombre: " + nombre;
 	}
 	
+	//  PRE: El jugador debe haber sido inicializado
+	//  POS: muestra por pantalla al jugador
 	public void mostrar() {
 		System.out.println(this);
 	}
 	
+	//  PRE: El jugador debe haber sido inicializado
+	//  POS: cierra el socket del jugador.
 	public void cerrarConexion() {
 		try {
 			this.socket.close();
