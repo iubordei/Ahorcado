@@ -12,7 +12,9 @@ public class Cliente {
 	// Constantes.
 	private static Scanner scanner = new Scanner(System.in);
 
-	private static final String TEXTO_MENU = "" + "Bienvenido al ahoracado %s\r\n" + "¿Qué deseas hacer?\r\n\r\n"
+	private static final String TEXTO_BIENVENIDA = "" + "\r\nBienvenido al ahoracado %s\r\n";
+	
+	private static final String TEXTO_MENU = "" + "¿Qué deseas hacer?\r\n"
 			+ "  - 1. Crear partida\r\n" + "  - 2. Unirse a una partida\r\n" + "  - 3. Salir\r\n";
 
 	private static final String TEXTO_INTRODUCIR_NOMBRE = "Introduce tu nombre:";
@@ -86,9 +88,10 @@ public class Cliente {
 	private void mostrarMenu() throws IOException {
 		// Enseñar el menu y leer la opción que elige el cliente.
 		int opcion = -1;
-		System.out.println(String.format(TEXTO_MENU, nombre));
+		System.out.println(String.format(TEXTO_BIENVENIDA, nombre));
 		while (opcion < 1 || opcion > 3) {
 			try {
+				System.out.println(TEXTO_MENU);
 				opcion = Integer.parseInt(scanner.nextLine());
 				
 			} catch (NumberFormatException e) {

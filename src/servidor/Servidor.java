@@ -53,9 +53,9 @@ public class Servidor {
 	}
 
 	// PRE: nombre != null, cliente != null, partidas != null, partidasActivas !=
-	// null.
+	// PRE: null.
 	// POS: crea una nueva partida del juego del ahorcado. Crea un nuevo jugador de
-	// nombre
+	// POS: nombre
 	// POS: "nombre" y le asigna el socket por el que se comunica con el servidor.
 	// POS: añade la partida a la lista de partidas y a la lista de partidas
 	// activas.
@@ -70,7 +70,7 @@ public class Servidor {
 
 	// PRE: nombre != null, cliente != null, partida >= 0.
 	// POS: añade a la partida activa elegida por el indice "partida" a un nuevo
-	// jugador
+	// POS: jugador
 	// POS: de nombre "nombre", junto con el socket por el que se comunica con el
 	// servidor.
 	public static void unirsePartida(String nombre, Socket socket, DataInputStream in, DataOutputStream out,
@@ -215,5 +215,6 @@ public class Servidor {
 		System.out.println("| |        \\ \\        | |");
 		System.out.println(": :         \\ \\       : :");
 		System.out.println(": :          `'       : :");
+		System.out.println("");
 	}
 }

@@ -168,7 +168,7 @@ public class Partida implements Serializable {
 					j.getOut().write(data);
 					j.getOut().flush();
 				} catch (IOException e) {
-					System.out.println("Error de comunicacion con el jugador " + j.getNombre());
+					System.out.println("Error de comunicación con el jugador " + j.getNombre());
 				}
 			}
 		}
@@ -218,7 +218,7 @@ public class Partida implements Serializable {
 			if (jugadores.isEmpty())
 				break;
 		}
-		actualizarPartida("LA PARTIDA HA FINALIZADO...\nLa palabra a resolver era: " + this.palabra + ".", false);
+		actualizarPartida("LA PARTIDA HA FINALIZADO..." + (solucionado ? "" : "\nLa palabra a resolver era: " + this.palabra + "."), false);
 		acabado = true;
 		for (Jugador j : jugadores) {
 			j.cerrarConexion();
