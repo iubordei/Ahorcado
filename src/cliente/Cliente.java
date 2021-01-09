@@ -54,7 +54,7 @@ public class Cliente {
 	}
 
 	// PRE: el objeto de tipo Cliente debe haber sido inicializado previamente.
-	// POS: el cliente se queda esperando a que le llegue un comando.
+	// POS: el objeto de tipo Cliente espera a que le llegue un comando.
 	public void waitForData() throws IOException {
 		int commandID = -1;
 
@@ -86,18 +86,25 @@ public class Cliente {
 	private void mostrarMenu() throws IOException {
 		// Enseñar el menu y leer la opción que elige el cliente.
 		int opcion = -1;
+		System.out.println(String.format(TEXTO_MENU, nombre));
 		while (opcion < 1 || opcion > 3) {
-			System.out.println(String.format(TEXTO_MENU, nombre));
-			opcion = scanner.nextInt();
+			try {
+				opcion = Integer.parseInt(scanner.nextLine());
+				
+			} catch (NumberFormatException e) {
+				System.out.println("\nOpción incorrecta... Introduce nuevamente la opción deseada:");
+			}
 		}
 		// Retornar la opción elegida.
 		switch (opcion) {
 		case 1:
 			opcion = Comando.COMANDO_CREAR_PARTIDA.getID();
 			break;
+
 		case 2:
 			opcion = Comando.COMANDO_UNIRSE_PARTIDA.getID();
 			break;
+
 		case 3:
 			opcion = Comando.COMANDO_SALIR.getID();
 			break;
@@ -130,8 +137,9 @@ public class Cliente {
 				// quieres crear una partida.
 				out.flush();
 				break;
+
 			default:
-				mostrarMenu(); // si no quieres crear partida, vuelves al menu inicial.
+				mostrarMenu(); // si no quieres crear partida, vuelves al menú inicial.
 			}
 			return;
 		}
@@ -142,13 +150,18 @@ public class Cliente {
 		}
 
 		// Leer el número de partida que elige el cliente.
-		System.out.println("\nIntroduce la partida a la que te quieres unir:");
 		while (opcion < 1 || opcion > numPartidas) {
-			opcion = scanner.nextInt();
+			try {
+				System.out.println("\nIntroduce la partida a la que te quieres unir:");
+				opcion = Integer.parseInt(scanner.nextLine());
+
+			} catch (NumberFormatException e) {
+				System.out.println("Opción incorrecta... Introduce nuevamente la opción deseada:");
+			}
 		}
 		out.writeInt(opcion);
 		out.flush();
-		System.out.println("Partida en curso, espera a tu turno");
+		System.out.println("Partida en curso, espera tu turno");
 	}
 
 	// PRE: el objeto de tipo Cliente debe haber sido inicializado previamente.
@@ -213,5 +226,4 @@ public class Cliente {
 	public String toString() {
 		return ("Nombre: " + nombre + ", partida: " + idPartida);
 	}
-
 }

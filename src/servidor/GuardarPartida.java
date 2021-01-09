@@ -24,6 +24,7 @@ public class GuardarPartida extends TimerTask {
 	// POS: finalizadas del "Juego del Ahorcado".
 	@Override
 	public void run() {
+		Servidor.actualizarPartidas();
 		try {
 			JAXBContext context = JAXBContext.newInstance(Partidas.class);
 			Marshaller m = context.createMarshaller();

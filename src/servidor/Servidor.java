@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Timer;
 
@@ -17,6 +18,9 @@ public class Servidor {
 	public static List<Partida> partidasFinalizadas = new ArrayList<>();
 
 	public static void main(String[] args) {
+		// Mostrar mensaje de bienvenida a la interfaz del servidor.
+		bienvenida();
+
 		// Listas de partidas creadas (todas), activas y acabadas.
 		Partidas registro = new Partidas();
 		registro.setPartidas(partidas);
@@ -25,13 +29,13 @@ public class Servidor {
 
 		// Guardado automático de las partidas acabadas cada 30 segundos.
 		Timer guardadoAutomatico = new Timer();
-		guardadoAutomatico.schedule(new GuardarPartida(registro), 0, 60000);
+		guardadoAutomatico.schedule(new GuardarPartida(registro), 0, 30000);
 
 		// Servidor que escucha peticiones de clientes para conectarse al "Juego del
 		// Ahorcado".
 		try (ServerSocket server = new ServerSocket(10000)) {
 			while (true) {
-				actualizarPartidasActivas(registro);
+				actualizarPartidas();
 
 				try {
 					// Establecemos la conexion con 1 cliente y lo clasificamos. Esta
@@ -88,11 +92,14 @@ public class Servidor {
 
 	// PRE:
 	// POS: elimina de la lista de partidas activas aquellas que ya hayan
-	// finalizado.
-	public static void actualizarPartidasActivas(Partidas archivo) {
+	// POS: finalizado.
+	public static void actualizarPartidas() {
 		for (Partida p : partidas) {
 			if (p.partidaAcabada()) {
 				partidasActivas.remove(p);
+				if (!partidasFinalizadas.contains(p)) {
+					partidasFinalizadas.add(p);
+				}
 			}
 		}
 	}
@@ -179,5 +186,34 @@ public class Servidor {
 				break;
 			}
 		}
+	}
+
+	// PRE:
+	// POS: muestra por pantalla un mensaje de bienvenida al ejecutar el servidor.
+	public static void bienvenida() {
+		System.out.println("Inicializando Servidor del Juego del Ahorcado...");
+		System.out.println(new Date(System.currentTimeMillis()));
+		System.out.println(" ____________.._______");
+		System.out.println("|  __________))______|");
+		System.out.println("| | / /      ||");
+		System.out.println("| |/ /       ||");
+		System.out.println("| | /        ||.-''.");
+		System.out.println("| |/         |/  _  \\");
+		System.out.println("| |          (\\\\`_.'");
+		System.out.println("| |         .-`--'.");
+		System.out.println("| |        /       \\");
+		System.out.println("| |       // |   | \\\\");
+		System.out.println("| |      //  |   |  \\\\");
+		System.out.println("| |     ')   | _ |   (`");
+		System.out.println("| |          || ||");
+		System.out.println("| |          || ||");
+		System.out.println("| |          || ||");
+		System.out.println("| |          || ||");
+		System.out.println("| |         / | | \\");
+		System.out.println("\"\"\"\"\"\"\"\"\"\"|_`-' `-' |\"\"\"|");
+		System.out.println("|\"|\"\"\"\"\"\"\"\\ \\       '\"|\"|");
+		System.out.println("| |        \\ \\        | |");
+		System.out.println(": :         \\ \\       : :");
+		System.out.println(": :          `'       : :");
 	}
 }

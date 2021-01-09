@@ -43,7 +43,7 @@ public class Partida implements Serializable {
 		vectorPalabraInicio = convertir();
 	}
 
-	// PRE: la partida debe haber sido inicializada.
+	// PRE: el objeto de tipo Partida debe haber sido inicializado previamente.
 	// POS: añade al Jugador jugador a la partida actual.
 	public void addJugador(Jugador jugador) {
 		if (jugadores.isEmpty()) {
@@ -53,18 +53,18 @@ public class Partida implements Serializable {
 		}
 	}
 
-	// PRE: la partida debe haber sido inicializada.
+	// PRE: el objeto de tipo Partida debe haber sido inicializado previamente.
 	// POS: devuelve un array formado por lo caracteres que componen la palabra
-	// jugada.
+	// POS: jugada.
 	public char[] convertir() {
 		return (palabra.toCharArray());
 	}
 
-	// PRE: la partida debe haber sido inicializada.
+	// PRE: el objeto de tipo Partida debe haber sido inicializado previamente.
 	// POS: devuelve TRUE si la letra introducida está en la palabra jugada;
 	// POS: FALSE en caso contrario. Actualiza el valor del número de errores, y
 	// POS: pone el estado de la partida a finalizado si se ha alcanzado el número
-	// máximo de errores.
+	// POS: máximo de errores.
 	public boolean comprobar(String s) {
 		for (char c : vectorPalabraInicio) {
 			if (c == s.charAt(0)) {
@@ -80,7 +80,7 @@ public class Partida implements Serializable {
 		return (false);
 	}
 
-	// PRE: la partida debe haber sido inicializada.
+	// PRE: el objeto de tipo Partida debe haber sido inicializado previamente.
 	// POS: devuelve TRUE si la letra introducida ya ha sido escrita,
 	// POS: y FALSE en caso contrario.
 	public boolean yaEscrita(String s) {
@@ -93,14 +93,12 @@ public class Partida implements Serializable {
 		return (false);
 	}
 
-	// PRE: la partida debe haber sido inicializada.
+	// PRE: el objeto de tipo Partida debe haber sido inicializado previamente.
 	// POS: si s es una palabra, la compara con la palabra jugada y determina si es
-	// correcta
-	// POS: o errónea (así como actualizar los atributos de número de errores /
-	// aciertos según proceda).
+	// POS: correcta o errónea (así como actualizar los atributos de número de
+	// POS: errores / aciertos según proceda).
 	// POS: si s es un sólo caracter, comprueba que pertenezca a la solución o si ya
-	// ha sido escrita,
-	// POS: y si sí pertenece o no ha sido ya escrito, lo añade
+	// POS: ha sido escrita, y si sí pertenece o no ha sido ya escrito, lo añade
 	// POS: al vector de la solución (actualizando el número de aciertos).
 	public void jugarLetra(String s, Jugador jugador) {
 		if (s.length() > 1) {
@@ -143,6 +141,9 @@ public class Partida implements Serializable {
 		}
 	}
 
+	// PRE: el objeto de tipo Partida debe haber sido inicializado previamente.
+	// POS: manda el estado actualizado de la Partida actual al Jugador
+	// POS: correspondiente.
 	private void actualizarPartida(String texto, boolean mandarErrores) {
 		synchronized (jugadores) {
 			for (Jugador j : jugadores) {
@@ -171,23 +172,24 @@ public class Partida implements Serializable {
 		}
 	}
 
-	// PRE: la partida debe haber sido inicializada.
+	// PRE: el objeto de tipo Partida debe haber sido inicializado previamente.
 	// POS: lleva a cabo una partida del juego del ahorcado, respetando los turnos
 	// POS: de los jugadores, mostrando el estado de la partida y calculando el
-	// tiempo de partida.
+	// POS: tiempo de partida.
 	public void jugar() {
 		String letra;
-		while (!acabado) {
+		while (errores < 6) {
 			List<Jugador> desconectados = new ArrayList<Jugador>();
 			synchronized (jugadores) {
 				for (Jugador j : jugadores) {
 					try {
-						if (errores < 6 && !acabado) {
+						if (errores < 6) {
 							actualizarPartida("-----------------------\nJugador " + j.getNombre()
 									+ ", es tu turno. Estado de la partida:", false);
 							letra = j.jugarTurno(vectorSolucion, errores);
 							jugarLetra(letra, j);
 						}
+						
 					} catch (IOException e) {
 						desconectados.add(j);
 					}
@@ -215,16 +217,16 @@ public class Partida implements Serializable {
 			if (jugadores.isEmpty())
 				break;
 		}
-		actualizarPartida("LA PARTIDA HA FINALIZADO", false);
-
+		actualizarPartida("LA PARTIDA HA FINALIZADO...\nLa palabra a resolver era: " + this.palabra + ".", false);
+		acabado = true;
 		for (Jugador j : jugadores) {
 			j.cerrarConexion();
 		}
 	}
 
-	// PRE: la partida debe haber sido inicializada.
+	// PRE: el objeto de tipo Partida debe haber sido inicializado previamente.
 	// POS: en función de la cantidad de errores de la partida, muestra el gráfico
-	// correspondiente por pantalla.
+	// POS: correspondiente por pantalla.
 	public void dibujar() {
 		System.out.println(Dibujo.dibujo(errores));
 		for (char c : vectorSolucion) {
@@ -233,10 +235,15 @@ public class Partida implements Serializable {
 		System.out.println("\n");
 	}
 
+	// PRE: el objeto de tipo Partida debe haber sido inicializado previamente.
+	// POS: devuelve un booleano que indica si la Partida ha sido finalizada.
 	public boolean partidaAcabada() {
 		return (this.acabado);
 	}
 
+	// PRE: el objeto de tipo Partida debe haber sido inicializado previamente.
+	// POS: devuelve una String quie contiene los nombres de todos los jugadores de
+	// POS: la Partida actual.
 	public String getNombresJugadores(List<Jugador> jugadores) {
 		String nombres = "";
 
@@ -246,6 +253,9 @@ public class Partida implements Serializable {
 		return nombres;
 	}
 
+	// PRE: el objeto de tipo Partida debe haber sido inicializado previamente.
+	// POS: devuelve una String que representa el estado de resolución de la
+	// POS: Partida.
 	public String estadoPartida() {
 		String estado = "";
 		estado += "Lider de la partida: " + jugadores.get(0).getNombre() + " - ";
@@ -254,15 +264,15 @@ public class Partida implements Serializable {
 		return (estado);
 	}
 
-	// PRE: la partida debe haber sido inicializada.
+	// PRE: el objeto de tipo Partida debe haber sido inicializado previamente.
 	// POS: muestra por pantalla el estado final de la partida.
 	public void mostrar() {
 		System.out.println(this);
 	}
 
-	// PRE: la partida debe haber sido inicializada.
+	// PRE: el objeto de tipo Partida debe haber sido inicializado previamente.
 	// POS: devuelve una String que representa el estado final de una partida del
-	// ahorcado.
+	// POS: ahorcado.
 	public String toString() {
 		String partida = new String("\n\n");
 		partida += "Palabra inicial: " + palabra + "\n";
@@ -348,7 +358,7 @@ public class Partida implements Serializable {
 		this.vectorSolucion = vectorSolucion;
 	}
 
-	@XmlElement(name = "acabado")
+	@XmlTransient
 	// PRE: el objeto de tipo Partida debe haber sido inicializado previamente.
 	// POS: devuelve un booleano que indica si la Partida actual ha sido finalizada.
 	public boolean isAcabado() {
