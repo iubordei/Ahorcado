@@ -168,9 +168,12 @@ public class Cliente {
 	// POS: obtiene la letra o palabra (String) que el cliente ha introducido
 	// POS: por teclado para posteriormente enviarla a través del Socket.
 	public String introducirLetra() {
-		System.out.println("Introduce la letra / palabra");
 		Scanner escaner = new Scanner(System.in);
-		String letra = escaner.nextLine();
+		String letra = "";
+		while (letra.length() == 0) {
+			System.out.println("Introduce la letra / palabra");
+			letra = escaner.nextLine();
+		}
 		return letra;
 	}
 
@@ -180,6 +183,7 @@ public class Cliente {
 	// POS: con la Partida en la que está jugando.
 	public void jugarTurno() throws IOException {
 		actualizarPartida();
+		System.out.println("Es tu turno!");
 		String letra = introducirLetra();
 		out.writeBytes(letra + "\r\n");
 		out.flush();

@@ -63,7 +63,7 @@ public class Partida implements Serializable {
 	// PRE: el objeto de tipo Partida debe haber sido inicializado previamente.
 	// POS: devuelve TRUE si la letra introducida está en la palabra jugada;
 	// POS: FALSE en caso contrario. Actualiza el valor del número de errores, y
-	// POS: pone el estado de la partida a finalizado si se ha alcanzado el número
+	// POS: pone el estado de la partida ha finalizado si se ha alcanzado el número
 	// POS: máximo de errores.
 	public boolean comprobar(String s) {
 		for (char c : vectorPalabraInicio) {
@@ -139,6 +139,8 @@ public class Partida implements Serializable {
 			actualizarPartida("El jugador " + jugador.getNombre() + " introduce '" + s + "' y resuelve la palabra.",
 					true);
 		}
+		if (errores == 6)
+			acabado = true;
 	}
 
 	// PRE: el objeto de tipo Partida debe haber sido inicializado previamente.
@@ -166,7 +168,7 @@ public class Partida implements Serializable {
 					j.getOut().write(data);
 					j.getOut().flush();
 				} catch (IOException e) {
-					e.printStackTrace();
+					System.out.println("Error de comunicacion con el jugador " + j.getNombre());
 				}
 			}
 		}
@@ -178,14 +180,13 @@ public class Partida implements Serializable {
 	// POS: tiempo de partida.
 	public void jugar() {
 		String letra;
-		while (errores < 6) {
+		while (errores < 6 && !acabado) {
 			List<Jugador> desconectados = new ArrayList<Jugador>();
 			synchronized (jugadores) {
 				for (Jugador j : jugadores) {
 					try {
-						if (errores < 6) {
-							actualizarPartida("-----------------------\nJugador " + j.getNombre()
-									+ ", es tu turno. Estado de la partida:", false);
+						if (errores < 6 && !acabado) {
+							actualizarPartida("-----------------------\nTurno del jugador " + j.getNombre(), false);
 							letra = j.jugarTurno(vectorSolucion, errores);
 							jugarLetra(letra, j);
 						}
